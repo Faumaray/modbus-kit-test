@@ -38,9 +38,6 @@ function(export_headers TARGET HEADER_SOURCE_DIR HEADER_DEST_DIR)
 
 endfunction()
 
-find_package(PkgConfig)
-pkg_search_module(MODBUS REQUIRED IMPORTED_TARGET libmodbus)
-
 file(GLOB_RECURSE header_list 
     "include/**/*.hpp"
     "include/*.hpp")
@@ -52,10 +49,9 @@ file(GLOB_RECURSE source_list
 add_library(${PROJECT_NAME}-shared SHARED ${header_list} ${source_list})
 add_library(${PROJECT_NAME}::Shared ALIAS ${PROJECT_NAME}-shared)
 
-export_headers(shared ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR}/include/shared)
+export_headers(${PROJECT_NAME}-shared ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR}/include/shared)
 target_include_directories(${PROJECT_NAME}-shared INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/include)
-
-target_link_libraries(${PROJECT_NAME}-shared PRIVATE PkgConfig::MODBUS)
+target_include_directories(${PROJECT_NAME}-shared PRIVATE include)
 
 
 install(TARGETS ${PROJECT_NAME}-shared)
