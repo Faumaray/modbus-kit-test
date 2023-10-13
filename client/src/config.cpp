@@ -2,10 +2,12 @@
 #include <fstream>
 #include <iostream>
 
-void Config::load_from_file(const std::string &filename) {
+void Config::load_from_file(const std::string &filename, std::string program) {
   std::ifstream file(filename);
   if (!file.is_open()) {
-    std::cerr << "Could not open configuration file: " << filename << std::endl;
+    std::cerr << "Could not open configuration file: " << filename << "\n\n"
+              << std::endl;
+    help(program);
     exit(1);
   }
 
@@ -31,7 +33,7 @@ void Config::load_from_commandline(int argc, char **argv) {
   }
 }
 
-void Config::help(char *program) {
+void Config::help(std::string program) {
   std::cout << "Usage: " << program
             << " [--address <address>] [--port <port>] [--config "
                "<config_file>]\n\n"
