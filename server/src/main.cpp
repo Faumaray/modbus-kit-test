@@ -2,17 +2,25 @@
 #include "config.hpp"
 #include "server.hpp"
 #include <iostream>
-#include <fstream>
 #include "device.hpp"
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
+#include <string>
 
 
 auto main(int argc, char *argv[]) -> int {
   try {
-    std::ifstream f("config_server.json");
-    nlohmann::json json = nlohmann::json::parse(f);
-    auto config = json.template get<Config>();
+    Config config;
+    config.load_from_commandline(argc, argv);
+
+      if (argc > 1 && argv[1] == "--config") {
+        config.load_from_file(argv[2]);
+      }
+      if (config.address == 0 || config.port == 0){
+          config.load_from_file("config_server.json");
+      }
+
+    std::cout << config << std::endl;
     asio::io_context io_context;
     auto device = std::make_shared<Device>(config.address);
     Server s(io_context, config.port, device);
@@ -24,12 +32,14 @@ auto main(int argc, char *argv[]) -> int {
     }
 
   } catch (nlohmann::json::exception &je){
-    std::cerr << "Exception: " << je.what() << "\n"
-            << "Config in file config_server.json\n"
-            << "Config Example: \n"
-            << "{\n\"address\": 1,\n\"port\": 8080\n}" << std::endl;
+    std::cerr << "Exception: " << je.what() 
+            << std::endl;
+    Config::help(argv[0]);
+    return 1;
   } catch (std::exception &e) {
     std::cerr << "Exception: " << e.what() << std::endl;
+    Config::help(argv[0]);
+    return 1;
   }
 
   return 0;

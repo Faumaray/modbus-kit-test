@@ -1,8 +1,8 @@
 #include "session.hpp"
 #include <asio/write.hpp>
 #include <iostream>
-#include "shared/crc.hpp"
 #include "shared/helper.hpp"
+#include "shared/response.hpp"
 
 void Session::start() { schedule_read(); }
 
@@ -23,46 +23,32 @@ void Session::schedule_read() {
 void Session::schedule_write(std::size_t length) {
     auto self(shared_from_this());
 
-    std::vector<uint8_t> data = {m_data[0]};
-  
+    Response response(1, ErrorFunctionCode::Undefined, ErrorCode::SlaveDeviceFailure);
     if(m_data[0] != m_device->getAddress()){
-        
-        data.emplace_back(m_data[1]+128);
-        data.emplace_back(2);
-  
+        std::cout << "Wrong slave";
+        response = Response(1, ErrorFunctionCode::ReadAnalogOutputHoldingRegisters, ErrorCode::IllegalDataAddress);
+        std::cout << response << std::endl;
     } else {
         uint16_t start = convert_8_to_16(m_data[2], m_data[3]);
         uint16_t count = convert_8_to_16(m_data[4], m_data[5]);
         
-        auto response = m_device->read(start, count);
+        auto device_response = m_device->read(start, count);
 
 
-        if(response[0] != (m_data[1]+128)){
-
-            data.emplace_back(m_data[1]);
-            data.emplace_back((uint8_t)(count*2));
-                
-            for(auto value : response){
-                auto split = split_16_to_Hi_and_Lo(value);
-                data.emplace_back(split[0]);
-                data.emplace_back(split[1]);
-            }
+        if(device_response[0] != static_cast<std::uint8_t>(ErrorFunctionCode::ReadAnalogOutputHoldingRegisters)){
+            response = Response(1, FunctionCode::ReadAnalogOutputHoldingRegisters, count*2, device_response);
         }else {
-            data.emplace_back(data[1]+128);
-            data.emplace_back((uint8_t)response[1]);
+            response = Response(1, ErrorFunctionCode::ReadAnalogOutputHoldingRegisters, ErrorCode::IllegalDataAddress);
         }
     }
-    auto crc = crc16(data.data(), data.size());
-    std::array<uint8_t,2> crc_split = split_16_to_Lo_and_Hi(crc);
-    data.emplace_back(crc_split[0]);
-    data.emplace_back(crc_split[1]);
-    data.shrink_to_fit();
+    auto response_raw = response.toRaw();
 
-  asio::async_write(m_socket, asio::buffer(data, data.size()),
-                    [this, self, data](std::error_code ec, std::size_t /*length*/) {
+  asio::async_write(m_socket, asio::buffer(response_raw),
+                    [this, self, response, response_raw](std::error_code ec, std::size_t /*length*/) {
                       if (!ec) {
-                        std::cout << "Server reply: \n";
-                        print_vector_in_hex(data);
+                        std::cout << "Server reply: \nRaw: ";
+                        print_vector_in_hex(response_raw);
+                        std::cout << "Stringed: " << response << std::endl;
                         schedule_read();
                       }
                     });
