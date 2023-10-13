@@ -1,11 +1,18 @@
 #pragma once
-#include <cstdint>
 #include <nlohmann/json.hpp>
 #include <string>
 
 struct Config {
-  std::string address;
-    std::string port;
+  Config() = default;
+  Config(const std::string &filename) { load_from_file(filename); };
+  Config(int argc, char **argv) { load_from_commandline(argc, argv); };
 
-  NLOHMANN_DEFINE_TYPE_INTRUSIVE(Config, address, port)
+  void load_from_file(const std::string &filename);
+  void load_from_commandline(int argc, char **argv);
+
+  static void help(char* program);
+  friend std::ostream &operator<<(std::ostream &os, const Config &config);
+
+  std::string address;
+  std::uint32_t port;
 };
