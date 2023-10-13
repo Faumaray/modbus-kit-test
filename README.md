@@ -14,7 +14,8 @@ Server and Client controlled by command line arguments (--help for more info) or
 ## Server
 address(number): Modbus address for the current server instance.
 port(number): The port number to listen on.
-*config_server.json*
+
+#### *config_server.json*
 ```json
 {
     "address": 1,
@@ -24,7 +25,8 @@ port(number): The port number to listen on.
 ## Client
 address(string): The address of the server to connect to. This can be either an IP address or a hostname.
 port(number): The port number to connect to on the server.
-*config_client.json*
+
+#### *config_client.json*
 ```json
 {
     "address": "127.0.0.1",
