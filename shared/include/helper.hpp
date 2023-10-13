@@ -2,8 +2,6 @@
 
 #include <array>
 #include <cstdint>
-#include <iomanip>
-#include <iostream>
 #include <vector>
 
 void print_in_hex(uint8_t value);

@@ -4,19 +4,19 @@
 #include "helper.hpp"
 
 Request::Request(const std::vector<uint8_t> &inputData) {
-    m_header.slaveID = inputData[0];
-    m_header.code = FunctionCode(inputData[1]);
-    m_body.start = convert_8_to_16(inputData[2], inputData[3]);
-    m_body.count = convert_8_to_16(inputData[4], inputData[5]);
+  m_header.slaveID = inputData[0];
+  m_header.code = FunctionCode(inputData[1]);
+  m_body.start = convert_8_to_16(inputData[2], inputData[3]);
+  m_body.count = convert_8_to_16(inputData[4], inputData[5]);
 }
 
-std::ostream &operator<<(std::ostream &os, const Request &request){
-    os << request.m_header.code << ", from slave "
-        << request.m_header.slaveID
-        << ", starting from address " << request.m_body.start
-        << ", on " << request.m_body.count << " registers";
-    
-    return os;
+std::ostream &operator<<(std::ostream &os, const Request &request) {
+  os << request.m_header.code << ", from slave "
+     << std::to_string(request.m_header.slaveID) << ", starting from address "
+     << std::to_string(request.m_body.start) << ", on "
+     << std::to_string(request.m_body.count) << " registers";
+
+  return os;
 }
 
 std::vector<uint8_t> Request::toRaw() const noexcept {
@@ -26,10 +26,8 @@ std::vector<uint8_t> Request::toRaw() const noexcept {
   result.emplace_back(m_header.slaveID);
   result.emplace_back(static_cast<std::uint8_t>(m_header.code));
 
-
   auto start_split = split_16_to_Hi_and_Lo(m_body.start);
   auto count_split = split_16_to_Hi_and_Lo(m_body.count);
-
 
   result.emplace_back(start_split[0]);
   result.emplace_back(start_split[1]);
@@ -41,6 +39,6 @@ std::vector<uint8_t> Request::toRaw() const noexcept {
   auto crc_split = split_16_to_Lo_and_Hi(crc);
   result.emplace_back(crc_split[0]);
   result.emplace_back(crc_split[1]);
- 
+
   return result;
 }
