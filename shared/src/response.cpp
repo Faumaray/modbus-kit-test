@@ -9,7 +9,7 @@
 Response::Response(uint8_t slaveId, FunctionCode functionCode,
                    uint8_t registersNumber, std::vector<std::uint8_t> values)
     : m_header(slaveId, functionCode, registersNumber) {
-  m_body.reserve(registersNumber/2);
+  m_body.reserve(registersNumber / 2);
   for (auto i = 0; i < values.size() - 1; i += 2) {
     auto combine = convert_8_to_16(values[i], values[i + 1]);
     m_body.emplace_back(combine);
@@ -25,8 +25,9 @@ Response::Response(std::vector<uint8_t> inputData) {
     m_header.FunctionCode = static_cast<FunctionCode>(inputData[1]);
     m_header.info = inputData[2];
     m_body.reserve(inputData[2]);
-    for (auto i = 3; i < inputData.size(); i += 2) {
-      m_body.emplace_back(inputData[i]);
+    for (auto i = 3; i < inputData.size() - 1; i += 2) {
+      auto combine = convert_8_to_16(inputData[i], inputData[i + 1]);
+      m_body.emplace_back(combine);
     }
   }
 }
@@ -36,7 +37,7 @@ std::ostream &operator<<(std::ostream &os, const Response &response) {
     os << std::get<FunctionCode>(response.m_header.FunctionCode)
        << ", from slave " << std::to_string(response.m_header.slaveID);
     os << ", returned next "
-       << std::to_string(std::get<std::uint8_t>(response.m_header.info)/2)
+       << std::to_string(std::get<std::uint8_t>(response.m_header.info) / 2)
        << " values: ";
     for (const auto &value : response.m_body) {
       os << "[" << std::to_string(value) << "] ";
